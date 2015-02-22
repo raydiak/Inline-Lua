@@ -48,7 +48,7 @@ method value-to-perl (Int:D $i is copy) {
     when 'table' {
         my %table := :{};
         lua_pushnil $!L;
-        while lua_next($!L, $i) != 0 {
+        while lua_next $!L, $i {
           my $key = self.value-to-perl(-2);
           my $value = self.value-to-perl(-1);
           %table{$key} = $value;
@@ -64,9 +64,12 @@ method value-to-lua ($_) {
     when !.defined { lua_pushnil $!L }
     when Bool { lua_pushboolean $!L, $_.Num }
     when Positional | Associative {
+        my $positional = ($_ ~~ Positional);
         lua_createtable $!L, 0, 0;
         for .pairs {
-            self.value-to-lua: .key;
+            my $key = .key;
+            $key = $key + 1 if $positional && $key ~~ Int;
+            self.value-to-lua: $key;
             self.value-to-lua: .value;
             lua_rawset $!L, -3;
         }

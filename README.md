@@ -2,26 +2,6 @@
 
 This is a Perl 6 module which allows execution of Lua code from Perl 6 code.
 
-## Requirements
-
-Lua 5.1 is currently the only supported version. This allows LuaJIT to be used
-as well, though no public option exists yet to load LuaJIT instead of Lua.
-Support for other versions of Lua is planned.
-
-Any Rakudo backend with a NativeCall implementation is expected to work, but
-testing has only been done under MoarVM on x86-64 Linux.
-
-## Status
-
-Inline::Lua currently supports passing and returning string, number, boolean,
-table, and nil values. Functions, userdata, and any other types are not
-supported yet.
-
-Tables returned from Lua are directly mapped to object hashes; there is no
-array detection or index-adjustment.
-
-Error reporting is crude, and the API is incomplete.
-
 ## Synopsis
 
     use Inline::Lua;
@@ -39,6 +19,30 @@ Error reporting is crude, and the API is incomplete.
     END
 
     say $quicksum;
+
+## Requirements
+
+Lua 5.1 is currently the only supported version. This allows LuaJIT to be used
+as well, though no public option exists yet to load LuaJIT instead of Lua.
+Support for other versions of Lua is planned.
+
+Any Rakudo backend with a NativeCall implementation is expected to work, but
+testing has only been done under MoarVM on x86-64 Linux.
+
+## Status
+
+Inline::Lua currently allows passing and returning any number of boolean,
+number,  string, table, and nil values, including nested tables. Functions,
+userdata, and any other types are not implemented.
+
+In Lua, there is no difference between Positional and Associative containers;
+both are a table. Lua tables use 1-based indexing. Positional objects passed in
+from Perl will have Integer keys incremented by one. Tables returned from Lua
+are directly mapped to object hashes; there is no attempt at array detection or
+index-adjustment. By contrast, multiple return values from Lua (not packed into
+a table) results in an ordinary Perl list instead of an object hash.
+
+Error reporting is crude, and the API is incomplete.
 
 ## Usage
 
