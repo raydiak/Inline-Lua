@@ -44,6 +44,10 @@ a table) results in an ordinary Perl list instead of an object hash.
 
 Error reporting is crude, and the API is incomplete.
 
+No provisions are made for growing Lua's stack beyond its initial size (which
+defaults to 20). Therefore, passing deeply-nested data structures in to Lua may
+result in an overflow.
+
 ## Usage
 
 ### .new()
