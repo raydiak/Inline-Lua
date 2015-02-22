@@ -2,13 +2,23 @@
 
 This is a Perl 6 module which allows execution of Lua code from Perl 6 code.
 
+## Requirements
+
+Lua 5.1 is currently the only supported version. This allows LuaJIT to be used
+as well, though no public option exists yet to load LuaJIT instead of Lua.
+Support for other versions of Lua is planned.
+
+Any Rakudo backend with a NativeCall implementation is expected to work, but
+testing has only been done under MoarVM on x86-64 Linux.
+
 ## Status
 
-This module currently supports passing and returning string, number, boolean,
-table, and nil values. Functions, userdata, and any other types are not supported yet.
+Inline::Lua currently supports passing and returning string, number, boolean,
+table, and nil values. Functions, userdata, and any other types are not
+supported yet.
 
-Tables returned from Lua are directly mapped to object hashes - no array
-detection or index-adjustment exists.
+Tables returned from Lua are directly mapped to object hashes; there is no
+array detection or index-adjustment.
 
 Error reporting is crude, and the API is incomplete.
 
@@ -16,10 +26,19 @@ Error reporting is crude, and the API is incomplete.
 
     use Inline::Lua;
     my $L = Inline::Lua.new;
-    my $fastfact = $L.run:
-        'local args = {...}; local n = 1; for i = 2, args[1] do n = n * i end; return n',
-        170;
-    say $fastfact;
+
+    my $quicksum = $L.run: q:to/END/, 1e8;
+        local args = {...}
+        local n = 0
+
+        for i = 1, args[1] do
+            n = n + i
+        end
+
+        return n
+    END
+
+    say $quicksum;
 
 ## Usage
 
