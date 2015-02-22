@@ -12,13 +12,24 @@ method !build_state () {
 }
 
 method run (Str:D $code, *@args) {
-    my $top = lua_gettop $!L;
-
     ensure
         :e<Compilation failed>,
         luaL_loadstring $!L, $code;
 
-    self.value-to-lua: $_ for @args;
+    self!call: @args;
+}
+
+method call (Str:D $func-name, *@args) {
+    my constant $global-index = %LUA_INDEX<GLOBALS>;
+    lua_getfield $!L, $global-index, $func-name;
+
+    self!call: @args;
+}
+
+method !call (*@args) {
+    my $top = lua_gettop($!L) - 1;
+
+    self.values-to-lua: @args;
 
     ensure
         :e<Execution failed>,
@@ -36,6 +47,10 @@ method run (Str:D $code, *@args) {
     }
 
     return |@return;
+}
+
+method values-to-lua (*@vals) {
+    self.value-to-lua: $_ for @vals;
 }
 
 method value-to-perl (Int:D $i is copy) {

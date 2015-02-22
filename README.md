@@ -58,6 +58,13 @@ Creates, initializes, and returns a new Inline::Lua instance.
 
 Compiles $code, runs it with @args, and returns and resulting value(s).
 
+### .call(Str:D $func-name, \*@args)
+
+Calls the named global function with @args, and returns and resulting value(s).
+
+To compile Lua code for subsequent use, pass it as a global function definition
+to the .run method, then use .call to execute it.
+
 ## Contact
 
 https://github.com/raydiak/Inline-Lua

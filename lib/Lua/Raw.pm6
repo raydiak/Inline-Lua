@@ -144,6 +144,14 @@ our sub lua_rawset (
     is export
 {*}
 
+our sub lua_getfield (
+    OpaquePointer $,
+    int32 $,
+    Str $ )
+    is native($lib)
+    is export
+{*}
+
 our %LUA_STATUS is export =
     1 => 'YIELD',
     2 => 'ERRRUN',
@@ -151,3 +159,7 @@ our %LUA_STATUS is export =
     4 => 'ERRMEM',
     5 => 'ERRERR';
 
+our %LUA_INDEX is export =
+    REGISTRY => -10000,
+    ENVIRON => -10001,
+    GLOBALS => -10002;
