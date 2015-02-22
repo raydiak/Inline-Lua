@@ -34,6 +34,8 @@ Compiles $code, runs it with @args, and returns and resulting value(s).
 ## Contact
 
 https://github.com/raydiak/Inline-Lua
+
 raydiak@cyberuniverses.com
+
 raydiak on #perl6 on irc.freenode.net
 
