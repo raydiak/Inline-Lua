@@ -38,14 +38,18 @@ This is a Perl 6 module which allows execution of Lua code from Perl 6 code.
 
 ## Requirements
 
-Lua 5.1 and LuaJIT are currently the only supported versions. To use LuaJIT,
-set the environment variable PERL6_LUA_RAW_VERSION to the string "jit".
-
-Support for other versions of Lua is planned, as well as more convenient ways
-to switch between them.
-
 Any Rakudo backend with a NativeCall implementation is expected to work, but
 testing has only been done under MoarVM on x86-64 Linux.
+
+Compatible with Lua 5.1 and LuaJIT. Support for other versions of Lua is
+planned.
+
+To use LuaJIT, set the environment variable PERL6_LUA_RAW_VERSION to the string
+"jit". If you wish to do so from within your Perl script, add a "BEGIN {
+%\*ENV<PERL6_LUA_RAW_VERSION> = 'jit' }" block before loading Inline::Lua.
+
+Alternatively, PERL6_LUA_RAW_LIBRARY may be set to an explicit path or library
+name, in which case PERL6_LUA_RAW_VERSION is ignored.
 
 ## Status
 

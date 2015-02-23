@@ -5,13 +5,17 @@ use NativeCall;
 my $lib;
 
 BEGIN {
-    $lib = (my $envlib = %*ENV<PERL6_LUA_RAW_VERSION>) ??
-        $lib = $envlib !! '5.1';
-    $lib = 'jit-5.1' if $lib eq 'jit';
-    warn "Attempting to use unsupported Lua version '$lib'; this is likely to fail"
-        if $lib ∉ <5.1 jit-5.1>;
-    $lib = "lua$lib";
-    $lib = 'lib' ~ $lib unless $*VM.config<dll> ~~ /dll/;
+    if my $envlib = %*ENV<PERL6_LUA_RAW_LIBRARY> {
+        $lib = $envlib;
+    } else {
+        $lib = (my $ver = %*ENV<PERL6_LUA_RAW_VERSION>) ??
+            $lib = $ver !! '5.1';
+        $lib = 'jit-5.1' if $lib eq 'jit';
+        warn "Attempting to use unsupported Lua version '$lib'; this is likely to fail"
+            if $lib ∉ <5.1 jit-5.1>;
+        $lib = "lua$lib";
+        $lib = 'lib' ~ $lib unless $*VM.config<dll> ~~ /dll/;
+    }
 }
 
 our sub luaL_newstate ()
