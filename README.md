@@ -65,22 +65,22 @@ result in an overflow.
 
 ## Usage
 
-### .new()
+### method new ()
 
 Creates, initializes, and returns a new Inline::Lua instance.
 
-### .run(Str:D $code, \*@args)
+### method run (Str:D $code, \*@args)
 
 Compiles $code, runs it with @args, and returns and resulting value(s).
 
-### .call(Str:D $name, \*@args)
+### method call (Str:D $name, \*@args)
 
 Calls the named global function with @args, and returns and resulting value(s).
 
 To compile Lua code for subsequent use, pass it as a global function definition
 to the .run method, then use .call to execute it.
 
-### .get-global(Str:D $name)
+### method get-global (Str:D $name)
 
 Returns the Lua value stored in the named global variable.
 
