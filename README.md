@@ -7,7 +7,7 @@ This is a Perl 6 module which allows execution of Lua code from Perl 6 code.
     use Inline::Lua;
     my $L = Inline::Lua.new;
 
-    my $quicksum = $L.run: q:to/END/, 1e8;
+    my $code = q:to/END/;
         local args = {...}
         local n = 0
 
@@ -17,8 +17,22 @@ This is a Perl 6 module which allows execution of Lua code from Perl 6 code.
 
         return n
     END
+    my ($arg, $sum) = 1e8;
 
-    say $quicksum;
+    $sum = $L.run: $code, $arg;
+
+    # OR
+
+    my $func = "function sum (...)\n $code\n end";
+    $L.run: $func;
+    $sum = $L.call: 'sum', $arg;
+
+    # OR
+
+    my &sum = $L.get-global: 'sum';
+    $sum = sum $arg;
+
+    say $sum;
 
 ## Requirements
 
@@ -58,12 +72,24 @@ Creates, initializes, and returns a new Inline::Lua instance.
 
 Compiles $code, runs it with @args, and returns and resulting value(s).
 
-### .call(Str:D $func-name, \*@args)
+### .call(Str:D $name, \*@args)
 
 Calls the named global function with @args, and returns and resulting value(s).
 
 To compile Lua code for subsequent use, pass it as a global function definition
 to the .run method, then use .call to execute it.
+
+### .get-global(Str:D $name)
+
+Returns the Lua value stored in the named global variable.
+
+If the value is a function, it returns a Perl routine which calls the function
+as if .call had been used. Otherwise it maps the values in the same way as
+results from the .run and .call methods.
+
+A new value is returned every time, making it useless for identity comparison
+(e.g. === on the same Lua table or function returned from different .get-global
+calls will be False).
 
 ## Contact
 

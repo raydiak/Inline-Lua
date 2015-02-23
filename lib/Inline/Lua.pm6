@@ -19,11 +19,27 @@ method run (Str:D $code, *@args) {
     self!call: @args;
 }
 
-method call (Str:D $func-name, *@args) {
-    my constant $global-index = %LUA_INDEX<GLOBALS>;
-    lua_getfield $!L, $global-index, $func-name;
-
+method call (Str:D $name, *@args) {
+    self!get-global: $name, :func;
     self!call: @args;
+}
+
+method get-global (Str:D $name, Bool :$func) {
+    self!get-global: $name;
+
+    my $return =
+        ( $func // (lua_typename($!L, lua_type $!L, -1) eq 'function') ) ??
+            self.^lookup('call')[0].assuming(self, $name) !!
+            self.value-to-perl: -1;
+
+    lua_settop $!L, -2;
+
+    $return;
+}
+
+method !get-global (Str:D $name) {
+    my constant $global-index = %LUA_INDEX<GLOBALS>;
+    lua_getfield $!L, $global-index, $name;
 }
 
 method !call (*@args) {

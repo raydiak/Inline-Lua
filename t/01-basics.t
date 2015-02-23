@@ -2,7 +2,7 @@ use v6;
 
 use Test;
 
-plan 4;
+plan 6;
 
 use Inline::Lua;
 
@@ -14,7 +14,10 @@ isa_ok $L = Inline::Lua.new, Inline::Lua, '.new() works';
 
 lives_ok { $L.run('return') }, '.run() works';
 
-ok $L.run(q:to/END/, 1e8) == 5e15 + 5e7,
+{
+    my $answer = 5e13 + 5e6;
+
+    my $code = q:to/END/;
         local args = {...}
         local n = 0
 
@@ -24,6 +27,19 @@ ok $L.run(q:to/END/, 1e8) == 5e15 + 5e7,
 
         return n
     END
-    'README example works';
+    my ($arg, $sum) = 1e7; # arg reduced by e1 from README
+
+    $sum = $L.run: $code, $arg;
+    ok $sum == $answer, 'README example #1 works';
+
+    my $func = "function sum (...)\n $code\n end";
+    $L.run: $func;
+    $sum = $L.call: 'sum', $arg;
+    ok $sum == $answer, 'README example #2 works';
+
+    my &sum = $L.get-global: 'sum';
+    $sum = sum $arg;
+    ok $sum == $answer, 'README example #3 works';
+}
 
 done;
