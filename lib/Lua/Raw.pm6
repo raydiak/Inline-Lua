@@ -3,10 +3,15 @@ module Lua::Raw;
 use NativeCall;
 
 my $lib;
+
 BEGIN {
-    $lib = $*VM.config<dll> ~~ /dll/ ??
-        'lua5.1' !! 'liblua5.1';
-        #'luajit-5.1' !! 'libluajit-5.1';
+    $lib = (my $envlib = %*ENV<PERL6_LUA_RAW_VERSION>) ??
+        $lib = $envlib !! '5.1';
+    $lib = 'jit-5.1' if $lib eq 'jit';
+    warn "Attempting to use unsupported Lua version '$lib'; this is likely to fail"
+        if $lib ∉ <5.1 jit-5.1>;
+    $lib = "lua$lib";
+    $lib = 'lib' ~ $lib unless $*VM.config<dll> ~~ /dll/;
 }
 
 our sub luaL_newstate ()
@@ -171,3 +176,4 @@ our %LUA_INDEX is export =
     REGISTRY => -10000,
     ENVIRON => -10001,
     GLOBALS => -10002;
+

@@ -38,9 +38,11 @@ This is a Perl 6 module which allows execution of Lua code from Perl 6 code.
 
 ## Requirements
 
-Lua 5.1 is currently the only supported version. This allows LuaJIT to be used
-as well, though no public option exists yet to load LuaJIT instead of Lua.
-Support for other versions of Lua is planned.
+Lua 5.1 and LuaJIT are currently the only supported versions. To use LuaJIT,
+set the environment variable PERL6_LUA_RAW_VERSION to the string "jit".
+
+Support for other versions of Lua is planned, as well as more convenient ways
+to switch between them.
 
 Any Rakudo backend with a NativeCall implementation is expected to work, but
 testing has only been done under MoarVM on x86-64 Linux.
