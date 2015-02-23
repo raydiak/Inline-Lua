@@ -26,6 +26,7 @@ This is a Perl 6 module which allows execution of Lua code from Perl 6 code.
 
     my $func = "function sum (...)\n $code\n end";
     $L.run: $func;
+
     $sum = $L.call: 'sum', $arg;
 
     # OR
@@ -85,12 +86,21 @@ to the .run method, then use .call to execute it.
 Returns the Lua value stored in the named global variable.
 
 If the value is a function, it returns a Perl routine which calls the function
-as if .call had been used. Otherwise it maps the values in the same way as
-results from the .run and .call methods.
+as if .call had been used. Note this means the function is looked up by name
+for each call, so if the value of the global variable changes, all wrappers in
+existence automatically point to the new function.
+
+Otherwise the values are converted in the same way as results from the .run and
+.call methods.
 
 A new value is returned every time, making it useless for identity comparison
 (e.g. === on the same Lua table or function returned from different .get-global
 calls will be False).
+
+### method set-global (Str:D $name, $value)
+
+Sets the value of the named global Lua variable, according to the same
+conversions used when passing Perl arguments into Lua code.
 
 ## Contact
 

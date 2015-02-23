@@ -2,7 +2,11 @@ use v6;
 
 use Test;
 
-plan 6;
+plan 7;
+
+my constant $root = $?FILE.IO.parent.parent;
+use lib $root.child: 'lib';
+use lib $root.child('blib').child: 'lib';
 
 use Inline::Lua;
 
@@ -34,6 +38,7 @@ lives_ok { $L.run('return') }, '.run() works';
 
     my $func = "function sum (...)\n $code\n end";
     $L.run: $func;
+
     $sum = $L.call: 'sum', $arg;
     ok $sum == $answer, 'README example #2 works';
 
@@ -41,5 +46,8 @@ lives_ok { $L.run('return') }, '.run() works';
     $sum = sum $arg;
     ok $sum == $answer, 'README example #3 works';
 }
+
+$L.set-global: 'foo', 'bar';
+ok $L.get-global('foo') eq 'bar', '.set-global() and .get-global() work';
 
 done;

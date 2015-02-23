@@ -11,6 +11,34 @@ method !build_state () {
     $L;
 }
 
+method get-global (Str:D $name, Bool :$func) {
+    self!get-global: $name;
+
+    my $return =
+        ( $func // (lua_typename($!L, lua_type $!L, -1) eq 'function') ) ??
+            self.^lookup('call')[0].assuming(self, $name) !!
+            self!value-to-perl: -1;
+
+    lua_settop $!L, -2;
+
+    $return;
+}
+
+method !get-global (Str:D $name) {
+    my constant $global-index = %LUA_INDEX<GLOBALS>;
+    lua_getfield $!L, $global-index, $name;
+}
+
+method set-global (Str:D $name, $val) {
+    self!value-to-lua: $val;
+    self!set-global: $name;
+}
+
+method !set-global (Str:D $name) {
+    my constant $global-index = %LUA_INDEX<GLOBALS>;
+    lua_setfield $!L, $global-index, $name;
+}
+
 method run (Str:D $code, *@args) {
     ensure
         :e<Compilation failed>,
@@ -24,28 +52,10 @@ method call (Str:D $name, *@args) {
     self!call: @args;
 }
 
-method get-global (Str:D $name, Bool :$func) {
-    self!get-global: $name;
-
-    my $return =
-        ( $func // (lua_typename($!L, lua_type $!L, -1) eq 'function') ) ??
-            self.^lookup('call')[0].assuming(self, $name) !!
-            self.value-to-perl: -1;
-
-    lua_settop $!L, -2;
-
-    $return;
-}
-
-method !get-global (Str:D $name) {
-    my constant $global-index = %LUA_INDEX<GLOBALS>;
-    lua_getfield $!L, $global-index, $name;
-}
-
 method !call (*@args) {
     my $top = lua_gettop($!L) - 1;
 
-    self.values-to-lua: @args;
+    self!values-to-lua: @args;
 
     ensure
         :e<Execution failed>,
@@ -55,21 +65,17 @@ method !call (*@args) {
     my $elems = lua_gettop($!L) - $top;
     
     if $elems > 1 {
-        @return.push: self.value-to-perl($top + $_) for 1..$elems;
+        @return.push: self!value-to-perl($top + $_) for 1..$elems;
         lua_settop $!L, $top;
     } elsif $elems == 1 {
-        @return = self.value-to-perl: $top + 1;
+        @return = self!value-to-perl: $top + 1;
         lua_settop $!L, $top;
     }
 
     return |@return;
 }
 
-method values-to-lua (*@vals) {
-    self.value-to-lua: $_ for @vals;
-}
-
-method value-to-perl (Int:D $i is copy) {
+method !value-to-perl (Int:D $i is copy) {
     $i = lua_gettop($!L) + $i + 1 if $i < 0;
     $_ = lua_typename $!L, lua_type $!L, $i;
 
@@ -80,8 +86,8 @@ method value-to-perl (Int:D $i is copy) {
         my %table := :{};
         lua_pushnil $!L;
         while lua_next $!L, $i {
-          my $key = self.value-to-perl(-2);
-          my $value = self.value-to-perl(-1);
+          my $key = self!value-to-perl(-2);
+          my $value = self!value-to-perl(-1);
           %table{$key} = $value;
           lua_settop $!L, -2;
         }
@@ -91,7 +97,11 @@ method value-to-perl (Int:D $i is copy) {
     fail "Converting Lua $_ values to Perl is NYI";
 }
 
-method value-to-lua ($_) {
+method !values-to-lua (*@vals) {
+    self!value-to-lua: $_ for @vals;
+}
+
+method !value-to-lua ($_) {
     when !.defined { lua_pushnil $!L }
     when Bool { lua_pushboolean $!L, $_.Num }
     when Positional | Associative {
@@ -100,8 +110,8 @@ method value-to-lua ($_) {
         for .pairs {
             my $key = .key;
             $key = $key + 1 if $positional && $key ~~ Int;
-            self.value-to-lua: $key;
-            self.value-to-lua: .value;
+            self!value-to-lua: $key;
+            self!value-to-lua: .value;
             lua_rawset $!L, -3;
         }
     }

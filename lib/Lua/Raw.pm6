@@ -152,6 +152,14 @@ our sub lua_getfield (
     is export
 {*}
 
+our sub lua_setfield (
+    OpaquePointer $,
+    int32 $,
+    Str $ )
+    is native($lib)
+    is export
+{*}
+
 our %LUA_STATUS is export =
     1 => 'YIELD',
     2 => 'ERRRUN',
