@@ -15,8 +15,6 @@ isa_ok $L = Inline::Lua.new, Inline::Lua, '.new() works';
 lives_ok { $L.run('return') }, '.run() works';
 
 {
-    my $answer = 5e13 + 5e6;
-
     my $code = q:to/END/;
         local args = {...}
         local n = 0
@@ -27,7 +25,9 @@ lives_ok { $L.run('return') }, '.run() works';
 
         return n
     END
-    my ($arg, $sum) = 1e7; # arg reduced by e1 from README
+    my $arg = 1e7; # arg reduced by e1 from README
+    my $answer = 5e13 + 5e6;
+    my $sum;
 
     $sum = $L.run: $code, $arg;
     ok $sum == $answer, 'README example #1 works';

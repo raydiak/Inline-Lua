@@ -17,7 +17,8 @@ This is a Perl 6 module which allows execution of Lua code from Perl 6 code.
 
         return n
     END
-    my ($arg, $sum) = 1e8;
+    my $arg = 1e8;
+    my $sum;
 
     $sum = $L.run: $code, $arg;
 
