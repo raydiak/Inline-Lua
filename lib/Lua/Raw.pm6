@@ -9,7 +9,7 @@ BEGIN {
         $lib = $envlib;
     } else {
         $lib = (my $ver = %*ENV<PERL6_LUA_RAW_VERSION>) ??
-            $lib = $ver !! '5.1';
+            $ver !! '5.1';
         $lib = 'jit-5.1' if $lib eq 'jit';
         warn "Attempting to use unsupported Lua version '$lib'; this is likely to fail"
             if $lib ∉ <5.1 jit-5.1>;
