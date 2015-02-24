@@ -73,23 +73,11 @@ Compatible with Lua 5.1 and LuaJIT. Support for other versions of Lua is
 planned.
 
 To use LuaJIT, set the environment variable PERL6_LUA_RAW_VERSION to the string
-"jit". If you wish to do so from within your Perl script, add a "BEGIN {
-%\*ENV<PERL6_LUA_RAW_VERSION> = 'jit' }" block before loading Inline::Lua.
+"jit". If you wish to do so from within your Perl script, add a line like "BEGIN
+%\*ENV<PERL6_LUA_RAW_VERSION> = 'jit';" before loading Inline::Lua.
 
 Alternatively, PERL6_LUA_RAW_LIBRARY may be set to an explicit path or library
 name, in which case PERL6_LUA_RAW_VERSION is ignored.
-
-IMPORTANT NOTE: the environment variables can currently only be checked at
-compilation time, meaning if the module is precompiled (usually the default),
-the setting can only be changed by rebuilding the module via something along
-the lines of:
-
-    PERL6_LUA_RAW_VERSION=jit panda install Inline::Lua # transwarp speeds
-
-or for Windows:
-
-    set PERL6_LUA_RAW_VERSION=jit
-    panda install Inline::Lua
 
 ## Values
 
