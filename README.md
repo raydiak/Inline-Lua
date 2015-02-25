@@ -5,6 +5,8 @@ This is a Perl 6 module which allows execution of Lua code from Perl 6 code.
 ## Synopsis
 
     use Inline::Lua;
+    # or use Inline::Lua::JIT;
+
     my $L = Inline::Lua.new;
 
     my $code = q:to/END/;
@@ -38,8 +40,9 @@ This is a Perl 6 module which allows execution of Lua code from Perl 6 code.
 
 ## Status
 
-Evaluating Lua code works. A LuaJIT demo game split across several files with
-OpenGL and SDL FFI bindings was even successfully tested.
+Both Lua 5.1 and LuaJIT are supported. Evaluating Lua code works. A LuaJIT demo
+game split across several files with OpenGL and SDL FFI bindings was even
+successfully tested.
 
 Any number of values can be passed to and returned from Lua. Simple values
 (boolean, nil, number, string) all work. Tables work with some conversion
@@ -54,11 +57,12 @@ routine for later (re)use.
 The API is incomplete, and error reporting is crude. The "Inline::" part is
 arguably NYI, as the present interface is object-oriented.
 
-Switching between Lua versions is clumsy and there is no auto-detection; see
-Requirements below.
+There is no auto-detection of available Lua versions, and switching between
+them isn't composable; see Requirements below.
 
-Value conversion between Lua and Perl has no concept of references yet;
-see Values further down.
+Translation between Lua and Perl has no concept of references yet.
+Particularly, this makes it mostly impossible to use tables as objects or
+classes from Perl; see Values further down.
 
 No provisions are made for growing Lua's stack beyond its initial size (which
 defaults to 20). Therefore, passing deeply-nested data structures to Lua may
@@ -72,12 +76,18 @@ testing has only been done under MoarVM on x86-64 Linux.
 Compatible with Lua 5.1 and LuaJIT. Support for other versions of Lua is
 planned.
 
-To use LuaJIT, set the environment variable PERL6_LUA_RAW_VERSION to the string
-"jit". If you wish to do so from within your Perl script, add a line like "BEGIN
-%\*ENV<PERL6_LUA_RAW_VERSION> = 'jit';" before loading Inline::Lua.
+To use LuaJIT, you can load Inline::Lua with
 
-Alternatively, PERL6_LUA_RAW_LIBRARY may be set to an explicit path or library
-name, in which case PERL6_LUA_RAW_VERSION is ignored.
+    use Inline::Lua::JIT;
+
+or
+
+    use Lua::Raw <JIT>;
+    use Inline::Lua;
+
+The version is determined the first time Inline::Lua (or Lua::Raw) is loaded;
+subsequent "use" calls will have no effect on it. As such, it is currently not
+possible to use different Lua versions from different modules, scopes, etc.
 
 ## Values
 

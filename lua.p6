@@ -4,25 +4,22 @@ constant $root = $?FILE.IO.parent;
 use lib $root.child('lib');
 use lib $root.child('blib').child('lib');
 
+my $lua-ver;
 BEGIN {
     if
         @*ARGS &&
         defined my $i = (^@*ARGS).first: {
             my $v = @*ARGS[$_];
-            $v ~~ /^ [\- $<not>=\/? j] | [\-\- $<not>=\/? jit] $/ &&
+            $v ~~ /^ [ '-j' | '--jit' ] $/ &&
             (!$_ || @*ARGS[^$_].none eq '--')
         }
     {
         @*ARGS.splice: $i, 1;
-        my $env := %*ENV<PERL6_LUA_RAW_VERSION>;
-        if ~$<not> {
-            $env = '' if $env && $env ~~ /:i jit/;
-        } else {
-            $env = 'jit';
-        }
+        $lua-ver = 'JIT';
     }
 }
 
+use Lua::Raw $lua-ver;
 use Inline::Lua;
 
 sub MAIN (Str $file is copy, *@args, Bool :$e) {
