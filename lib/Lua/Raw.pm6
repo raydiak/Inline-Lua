@@ -1,6 +1,6 @@
-use NativeCall;
+module Lua::Raw;
 
-module Lua::Raw {
+use NativeCall;
 
 our sub luaL_newstate ()
     returns OpaquePointer
@@ -96,6 +96,12 @@ our sub lua_createtable (
     int32 $ = 0 )
 {...}
 
+our sub lua_rawgeti (
+    OpaquePointer $,
+    int32 $,
+    int32 $ )
+{...}
+
 our sub lua_rawset (
     OpaquePointer $,
     int32 $ )
@@ -113,6 +119,35 @@ our sub lua_setfield (
     Str $ )
 {...}
 
+our sub luaL_ref (
+    OpaquePointer $,
+    int32 $ )
+    returns int32
+{...}
+
+our sub luaL_unref (
+    OpaquePointer $,
+    int32 $,
+    int32 $ )
+{...}
+
+our sub lua_topointer (
+    OpaquePointer $,
+    int32 $ )
+    returns OpaquePointer
+{...}
+
+our sub lua_objlen (
+    OpaquePointer $,
+    int32 $ )
+    returns int32
+{...}
+
+our sub lua_gettable (
+    OpaquePointer $,
+    int32 $ )
+{...}
+
 our %LUA_STATUS is export =
     1 => 'YIELD',
     2 => 'ERRRUN',
@@ -125,9 +160,9 @@ our %LUA_INDEX is export =
     ENVIRON => -10001,
     GLOBALS => -10002;
 
-} # close module
-
-sub EXPORT (Str(Any:D) $lib is copy = '5.1') {
+#our sub init (Str(Any:D) $lib is copy = '5.1') {
+BEGIN {
+    my $lib = '5.1';
     unless state $ran {
         $lib = 'jit-5.1' if $lib.uc eq 'JIT';
         warn "Attempting to use unsupported Lua version '$lib'; this is likely to fail"
@@ -141,8 +176,6 @@ sub EXPORT (Str(Any:D) $lib is copy = '5.1') {
 
         $ran = True;
     }
-
-    {};
 }
 
 
