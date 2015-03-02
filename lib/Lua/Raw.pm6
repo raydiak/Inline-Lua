@@ -176,8 +176,6 @@ has %.subs =
         $_.name => trait_mod:<is>($_.clone, :native(self.lib));
     };
 
-#method sink (|) { self }
-
 method FALLBACK ($name, |args) { %!subs{$name}(|args) }
 
 

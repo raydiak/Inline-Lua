@@ -199,8 +199,6 @@ class Inline::Lua::Table {
         $method(self, |args)
     }
 
-    #method sink () { self }
-
     has $.obj handles ** = Inline::Lua::TableObj.new: table => self;
 }
 
