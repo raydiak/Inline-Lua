@@ -1,4 +1,4 @@
-module Lua::Raw;
+class Lua::Raw;
 
 use NativeCall;
 
@@ -148,34 +148,36 @@ our sub lua_gettable (
     int32 $ )
 {...}
 
-our %LUA_STATUS is export =
+our %.LUA_STATUS =
     1 => 'YIELD',
     2 => 'ERRRUN',
     3 => 'ERRSYNTAX',
     4 => 'ERRMEM',
     5 => 'ERRERR';
 
-our %LUA_INDEX is export =
+our %.LUA_INDEX =
     REGISTRY => -10000,
     ENVIRON => -10001,
     GLOBALS => -10002;
 
-#our sub init (Str(Any:D) $lib is copy = '5.1') {
-BEGIN {
-    my $lib = '5.1';
-    unless state $ran {
-        $lib = 'jit-5.1' if $lib.uc eq 'JIT';
-        warn "Attempting to use unsupported Lua version '$lib'; this is likely to fail"
-            if $lib ∉ <5.1 jit-5.1>;
-        $lib = "lua$lib";
-        $lib = "lib$lib" unless $*VM.config<dll> ~~ /dll/;
+has $.lua = '5.1';
+has $.lib = do {
+    my $lib = $!lua;
+    $lib = 'jit-5.1' if $lib.uc eq 'JIT';
+    warn "Attempting to use unsupported Lua version '$lib'; this is likely to fail"
+        if $lib ∉ <5.1 jit-5.1>;
+    $lib = "lua$lib";
+    $lib = "lib$lib" unless $*VM.config<dll> ~~ /dll/;
+};
 
+has %.subs =
+    Lua::Raw::.grep({ .key ~~ /^ \&luaL?_/ })».value.map: {
         # runtime NativeCall technique forked from Inline::Python
-        trait_mod:<is>($_, :native($lib))
-            for Lua::Raw::.grep({ .key ~~ /^ \&luaL?_/ })».value;
+        $_.name => trait_mod:<is>($_.clone, :native(self.lib));
+    };
 
-        $ran = True;
-    }
-}
+#method sink (|) { self }
+
+method FALLBACK ($name, |args) { %!subs{$name}(|args) }
 
 
