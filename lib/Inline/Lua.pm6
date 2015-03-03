@@ -171,7 +171,6 @@ method ensure ($code, :$e is copy) {
 role LuaParent[Str:D $parent] is export {
     method sink () { self }
     method FALLBACK (|args) {
-        require Inline::Lua;
         Inline::Lua.default-lua.get-global($parent).invoke: |args;
     }
 }
