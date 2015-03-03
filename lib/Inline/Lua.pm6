@@ -3,12 +3,18 @@ class Inline::Lua;
 use Lua::Raw;
 use Inline::Lua::Object;
 
+our $.default-lua = Any;
+
 has Str:D $.lua = '5.1';
 has $.raw = Lua::Raw.new: :$!lua;
 has $.state = self.new-state;
 has $.index = self.new-index;
 has %.refcount;
 has %.ptrref;
+
+method new (|) {
+    Inline::Lua.default-lua = callsame;
+}
 
 method new-state () {
     my $L = $!raw.luaL_newstate;
@@ -157,9 +163,26 @@ method value-to-lua ($_) {
 
 method ensure ($code, :$e is copy) {
     if $code {
-        my $msg = "Error $code $!raw.LUA_STATUS(){$code}}";
+        my $msg = "Error $code $!raw.LUA_STATUS(){$code}";
         fail $e ?? "$e\n$msg" !! $msg;
     }
 }
+
+role LuaParent[Str:D $parent] is export {
+    method sink () { self }
+    method FALLBACK (|args) {
+        require Inline::Lua;
+        Inline::Lua.default-lua.get-global($parent).invoke: |args;
+    }
+}
+
+#`[[[ has problems, one being that $parent is needed at compose time
+role LuaParent[Inline::Lua::Table:D $parent] {
+    method sink () { self }
+    method FALLBACK (|args) {
+        $parent.invoke: |args;
+    }
+}
+#]]]
 
 

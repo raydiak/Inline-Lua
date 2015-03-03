@@ -44,7 +44,7 @@ class Inline::Lua::Function {
     has $.count = Inf;
     has $.signature = :(*@);
 
-    method postcircumfix:<( )> (|args) { self.call(|args) }
+    method postcircumfix:<( )> (|args) { self.call: |args }
 
     method call (*@args, :$stack) {
         self.get unless $stack;
@@ -66,18 +66,16 @@ class Inline::Lua::Function {
 class Inline::Lua::TableObj {
     # making this private with an explicit public accessor breaks the circular
     # ref loop for e.g. .perl()
-    has $!inline-lua-table; method inline-lua-table () { $!inline-lua-table }
+    has $!inline-lua-table;
+    method inline-lua-table () { $!inline-lua-table }
 
     multi submethod BUILD (:table($!inline-lua-table), |) {
         nextsame;
     }
 
     method sink () { self }
-    method FALLBACK ($name, :$call, |args) {
-        my \val = $!inline-lua-table{$name};
-        $call !eqv False && val ~~ Callable ??
-            val.($!inline-lua-table, args.list) !!
-            val;
+    method FALLBACK (|args) {
+        $!inline-lua-table.invoke: |args;
     }
 }
 
@@ -99,6 +97,8 @@ class Inline::Lua::Table {
         self.lua.raw.lua_settop: self.lua.state, -2 unless $leave;
         $len;
     }
+
+    method end (|args) { self.elems(|args) - 1 }
 
     method exists_pos ($i) { $i %% 1 && 0 < $i < self.elems }
 
@@ -153,34 +153,18 @@ class Inline::Lua::Table {
         @ret;
     }
 
-    method kv (:$stack, :$leave = $stack) {
+    method values (:$stack, :$leave = $stack) {
         self.get unless $stack;
         my @ret;
         self.lua.raw.lua_pushnil: self.lua.state;
         while self.lua.raw.lua_next: self.lua.state, -2 {
-            my \v = self.lua.value-from-lua;
-            my \k = self.lua.value-from-lua: :keep;
-            @ret[+*] = k;
-            @ret[+*] = v;
+            @ret[+*] = self.lua.value-from-lua;
         }
         self.lua.raw.lua_settop: self.lua.state, -2 unless $leave;
         @ret;
     }
 
-    method pairs (:$stack, :$leave = $stack) {
-        self.get unless $stack;
-        my @ret;
-        self.lua.raw.lua_pushnil: self.lua.state;
-        while self.lua.raw.lua_next: self.lua.state, -2 {
-            @ret[+*] = Pair.new:
-                :value( self.lua.value-from-lua ),
-                :key(   self.lua.value-from-lua: :keep );
-        }
-        self.lua.raw.lua_settop: self.lua.state, -2 unless $leave;
-        @ret;
-    }
-
-    method hash (:$stack, :$leave = $stack) {
+    method hash (:$stack, :$leave = $stack) handles <kv pairs> {
         self.get unless $stack;
         my %ret{Any};
         self.lua.raw.lua_pushnil: self.lua.state;
@@ -197,25 +181,16 @@ class Inline::Lua::Table {
 
     ### object stuff
 
-    method invoke ($method is copy, |args) {
-        $method = self.at_key($method) unless $method ~~ Callable;
-        $method(self, |args)
+    method invoke ($method, :$call, |args) {
+        my $val = $method;
+        $val = self.at_key($val) unless $val ~~ Callable;
+
+        $call !eqv False && $val ~~ Callable ??
+            $val(self, |args) !! $val;
     }
 
     method sink () { self }
     has $.obj handles ** = Inline::Lua::TableObj.new: table => self;
-}
-
-
-
-role LuaParent[$parent] is export {
-    has $!self = do {
-        $parent.lua.raw.lua_createtable: $parent.lua.state, 0, 0;
-        Inline::Lua::Table.from-stack: :lua($parent.lua);
-    };
-
-    method sink () { self }
-    method FALLBACK ($name, |args) { $parent{$name}(self, |args) }
 }
 
 
