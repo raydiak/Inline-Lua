@@ -36,9 +36,7 @@ lives_ok { $L.run('return') }, '.run() works';
     $sum = $L.run: $code, $arg;
     ok $sum == $answer, 'README example #1 works';
 
-    my $func = "function sum (...)\n $code\n end";
-    $L.run: $func;
-
+    $L.run: "function sum (...)\n $code\n end";
     $sum = $L.call: 'sum', $arg;
     ok $sum == $answer, 'README example #2 works';
 
