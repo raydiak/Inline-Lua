@@ -55,7 +55,7 @@ method unref ($ref) {
     }
 }
 
-method get-global (Str:D $name, :$func is copy) {
+method get-global (Str:D $name) {
     self!get-global: $name;
     self.value-from-lua;
 }
@@ -82,7 +82,7 @@ method run (Str:D $code, *@args) {
 }
 
 method call (Str:D $name, *@args) {
-    self!get-global: $name, :func;
+    self!get-global: $name;
     self!call: @args;
 }
 
