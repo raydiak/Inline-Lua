@@ -2,7 +2,7 @@
 
 constant $root = $?FILE.IO.parent;
 use lib $root.child('lib');
-use lib $root.child('blib').child('lib');
+use lib $root.child('blib').child: 'lib';
 
 use Inline::Lua;
 

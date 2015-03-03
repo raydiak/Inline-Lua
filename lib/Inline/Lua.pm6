@@ -5,8 +5,12 @@ use Inline::Lua::Object;
 
 our $.default-lua = Any;
 
-has Str:D $.lua = '5.1';
-has $.raw = Lua::Raw.new: :$!lua;
+has $.lua;
+has $.lib;
+has $.raw =
+    $!lib.defined ?? Lua::Raw.new: :$!lib !!
+    $!lua.defined ?? Lua::Raw.new: :$!lua !!
+    Lua::Raw.new;
 has $.state = self.new-state;
 has $.index = self.new-index;
 has %.refcount;

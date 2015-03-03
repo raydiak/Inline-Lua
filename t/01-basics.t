@@ -51,16 +51,15 @@ $L.set-global: 'foo', 'bar';
 ok $L.get-global('foo') eq 'bar', '.set-global() and .get-global() work';
 
 {
-    my $t = $L.run: 'return({...})',
-        123, "abc", True, Any, {:foo(3),:bar(77)};
+    my $t = $L.run: 'return({...})', 123, "abc", True, Any, {:foo(3), :bar(77)};
 
     ok $t ~~ Inline::Lua::Table, 'Tables work';
     ok (my @ret = $t.list).elems == 5, 'Arrays work';
-    ok @ret[4].hash eqv {:foo(3|3e0),:bar(77|77e0)}, 'Hashes work';
+    ok @ret[4].hash eqv {:foo(3|3e0), :bar(77|77e0)}, 'Hashes work';
     ok @ret[0] == 123, 'Numbers work';
     ok @ret[1] eq 'abc', 'Strings work';
     ok @ret[2] === True, 'Bools work';
-    ok @ret[3] === Any, 'Nil/undefs work';
+    ok @ret[3] === Any, 'Nils work';
 }
 
 {
