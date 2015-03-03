@@ -5,19 +5,26 @@ use Inline::Lua::Object;
 
 our $.default-lua = Any;
 
-has $.lua;
-has $.lib;
-has $.raw =
-    $!lib.defined ?? Lua::Raw.new: :$!lib !!
-    $!lua.defined ?? Lua::Raw.new: :$!lua !!
-    Lua::Raw.new;
+has $.raw = die 'raw is required';
 has $.state = self.new-state;
 has $.index = self.new-index;
 has %.refcount;
 has %.ptrref;
 
-method new (|) {
-    Inline::Lua.default-lua = callsame;
+method new (Bool :$auto, Str :$lua, Str :$lib, :$raw is copy, |args) {
+    my $new;
+    if !$raw && $auto !eqv False && !defined any $lib, $lua {
+        $new = try { self.new: :lua<JIT>, |args };
+        $new //= self.new: :!auto, |args;
+    } else {
+        when !$raw {
+            my %raw-args = (:$lua, :$lib).grep: *.value.defined;
+            $raw = Lua::Raw.new: |%raw-args;
+            $new = self.new: :$raw, |args;
+        }
+        $new = callsame;
+    }
+    Inline::Lua.default-lua = $new;
 }
 
 method new-state () {

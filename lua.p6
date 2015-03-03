@@ -7,7 +7,11 @@ use lib $root.child('blib').child: 'lib';
 use Inline::Lua;
 
 sub MAIN (Str $file is copy, *@args, Bool :$jit, Bool :$e) {
-    my $L = Inline::Lua.new: :lua($jit ?? 'JIT' !! '5.1');
+    my $L = do given $jit { # JIT selection
+        when !*.defined { Inline::Lua.new } # detect
+        when !* { Inline::Lua.new: :!auto } # no
+        default { Inline::Lua.new: :lua<JIT> } # yes
+    }
 
     $file = $file.IO.slurp unless $e;
 
