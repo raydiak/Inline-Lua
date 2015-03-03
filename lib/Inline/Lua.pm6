@@ -128,7 +128,7 @@ method values-to-lua (*@vals) {
 
 method value-to-lua ($_) {
     when !.defined { $!raw.lua_pushnil: $!state }
-    when Bool { $!raw.lua_pushboolean: $!state, $_.Num }
+    when Bool { $!raw.lua_pushboolean: $!state, Int($_) }
     when Inline::Lua::TableObj { $_.inline-lua-table.get }
     when Inline::Lua::Object { $_.get }
     when Positional | Associative {

@@ -64,12 +64,15 @@ class Inline::Lua::Function {
 
 
 class Inline::Lua::TableObj {
-    has $.inline-lua-table;
+    # making this private with an explicit public accessor breaks the circular
+    # ref loop for e.g. .perl()
+    has $!inline-lua-table; method inline-lua-table () { $!inline-lua-table }
 
     multi submethod BUILD (:table($!inline-lua-table), |) {
         nextsame;
     }
 
+    method sink () { self }
     method FALLBACK ($name, :$call, |args) {
         my \val = $!inline-lua-table{$name};
         $call !eqv False && val ~~ Callable ??
@@ -199,6 +202,7 @@ class Inline::Lua::Table {
         $method(self, |args)
     }
 
+    method sink () { self }
     has $.obj handles ** = Inline::Lua::TableObj.new: table => self;
 }
 
@@ -210,6 +214,7 @@ role LuaParent[$parent] is export {
         Inline::Lua::Table.from-stack: :lua($parent.lua);
     };
 
+    method sink () { self }
     method FALLBACK ($name, |args) { $parent{$name}(self, |args) }
 }
 

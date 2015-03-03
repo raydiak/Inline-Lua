@@ -170,12 +170,15 @@ has $.lib = do {
     $lib = "lib$lib" unless $*VM.config<dll> ~~ /dll/;
 };
 
-has %.subs =
+# mainly make this private to omit from .perl
+has %!subs =
     Lua::Raw::.grep({ .key ~~ /^ \&luaL?_/ })».value.map: {
         # runtime NativeCall technique forked from Inline::Python
         $_.name => trait_mod:<is>($_.clone, :native(self.lib));
     };
 
+
+method sink () { self }
 method FALLBACK ($name, |args) { %!subs{$name}(|args) }
 
 
