@@ -36,6 +36,8 @@ with inspiration, APIs, and techniques from Inline::Perl5 and Inline::Python.
 
     say $sum;
 
+    # TODO show off tables
+
 ## Requirements
 
 Any Rakudo backend with a NativeCall implementation is expected to work, but
