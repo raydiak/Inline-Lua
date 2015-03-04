@@ -189,32 +189,61 @@ same referenced Lua table or function which they were originally attached to.
 
 ## Usage
 
-*Note* everything here is accurate, but much is missing, mostly the API of the
-::Object types (which is somewhat outlined above in Values). In the mean time,
-also see the tests.
+### Inline::Lua
 
-### method new ()
+Represents a Lua instance with it's own global environment. Multiple
+Inline::Lua instances may be used, but passing ::Objects between different
+instances is not supported, and using LuaParent does not work well with
+multiple instances (both of which are described further down).
 
-Creates, initializes, and returns a new Inline::Lua instance.
+#### method new ()
 
-### method run (Str:D $code, \*@args)
+Creates, initializes, and returns a new Inline::Lua instance with the standard
+Lua libraries loaded.
+
+#### method run (Str:D $code, \*@args)
 
 Compiles $code, runs it with @args, and returns any resulting value(s).
 
-### method call (Str:D $name, \*@args)
+#### method call (Str:D $name, \*@args)
 
 Calls the named global function with @args, and returns any resulting value(s).
 
 To compile Lua code for subsequent use, pass it as a global function definition
 to the .run method, then use .call to execute it.
 
-### method get-global (Str:D $name)
+#### method get-global (Str:D $name)
 
 Returns the value stored in the named global Lua variable.
 
-### method set-global (Str:D $name, $value)
+#### method set-global (Str:D $name, $value)
 
 Sets the value of the named global Lua variable.
+
+### Inline::Lua::Object
+
+Base role for values which Lua regards as "objects" (tables and functions are
+currently implemented). This role manages references and allows the object to
+be pushed on to the Lua stack, none of which is part of the intended public
+interface. The object types can not be meaningfully instantiated from Perl at
+this time, rather they always result from a value being returned to Perl from
+Lua.
+
+### Inline::Lua::Function
+
+A Lua function which can be called directly from Perl. It is a Callable object
+and so can be invoked like any other Routine, and can be stored in an &-sigiled
+variable. Parameters are exposed in Perl as slurpy positionals with no current
+regard for the actual parameter list of the Lua function.
+
+### Inline::Lua::Table
+
+A table in Lua represents the concepts which Perl regards as variously arrays,
+hashes, objects, classes, roles, and more. Therefore this type attempts to
+provide an interface as all of these things. Underneath, however, all calls to
+a ::Table perform the operation on the referenced Lua table, not a Perl copy.
+
+### TODO finish documenting Table, TableObj, and LuaParent.
 
 ## Contact
 
