@@ -13,7 +13,7 @@ has %.ptrref;
 
 method new (Bool :$auto, Str :$lua, Str :$lib, :$raw, |args) {
     my $new;
-    if !$raw && $auto !eqv False && !defined any $lib, $lua {
+    if !$raw && $auto !eqv False && ($lib, $lua)».defined.none {
         $new = try { self.new: :lua<JIT>, |args };
         $new //= self.new: :!auto, |args;
     } else {
