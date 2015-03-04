@@ -240,8 +240,50 @@ regard for the actual parameter list of the Lua function.
 
 A table in Lua represents the concepts which Perl regards as variously arrays,
 hashes, objects, classes, roles, and more. Therefore this type attempts to
-provide an interface as all of these things. Underneath, however, all calls to
-a ::Table perform the operation on the referenced Lua table, not a Perl copy.
+provide an interface as all of these things. Underneath, however, calls to a
+::Table perform the operation on the referenced Lua table, not a Perl copy.
+All the usual Positional and Associative subscripts work on a ::Table including
+slicing and possibly various adverbs (untested).
+
+When accessed as a hash, a ::Table appears as an object hash (:{} or
+Hash[Any,Any] in Perl code), in keeping with the semantics of Lua tables. All
+numeric keys will be Num (or possibly some precision and/or native variant
+thereof) because default Lua handles any number as a C double. Numeric values
+used as hash subscripts to a ::Table will be automatically coerced to a num.
+
+Positional indices, on the other hand, are treated as integers in Perl as
+always. Lua tables use 1-based indexing when treated as an array, while Perl
+uses zero-based indexing. When accessed as an array, the index is offset by
+one accordingly. In other words, $table[0] is the same element as $table{1}.
+
+#### method list ()
+
+Returns a shallow copy of the positional portion of the table, which is
+independent of the original Lua object.
+
+#### method elems ()
+#### method end ()
+
+Lua has a nondeterministic notion of where the end of a sparse array is, while
+Perl always considers the end to be after the defined element with the highest
+index, which always includes any holes within the array. Perl arguably doesn't
+even support arrays with missing elements so much as arrays with undefined
+elements, unless using a type of hash instead, as Lua does. To compensate, a
+bit of slower but far more correct code iterates over all the table's keys to
+find the highest defined whole number key, instead of Lua's length operation.
+This is also done when the end needs to be found for other operations like
+.list or slicing/indexing with Whatever ([\*]) and WhateverCode ([\*-1]).
+
+#### method hash ()
+#### method keys ()
+#### method values ()
+#### method kv ()
+#### method pairs ()
+
+These methods return a shallow copy of the table which is independent of the
+original Lua object. The structure returned is the same as the corresponding
+Hash methods, with the exception that .hash returns an object hash
+(Hash[Any,Any]) instead of Perl's default (Hash[Mu,Str]).
 
 ### TODO finish documenting Table, TableObj, and LuaParent.
 
