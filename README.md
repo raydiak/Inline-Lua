@@ -104,19 +104,32 @@ table.
       function  Associative,                Inline::Lua::Table
                 Inline::Lua::Object )       Inline::Lua::Function
 
-Tables returned from Lua are exposed as Inline::Lua::Table instances, which can
-be accessed directly with hash or array subscripts (including slicing),
-converted to a .hash or .list, or used as an object (or role via LuaParent).
-Positional access will apply the appropriate index adjustment, and Associative
-access automatically coerces Numerics to Num. See Usage below for details.
+Not counting floating-point values like NaN, nil is the only "undefined" value
+in Lua. All undefined Perl values will be translated as nil, and when it is
+returned from Lua it will yield Any.
 
-In contrast to tables, multiple return values (not packed in a table) from Lua
-back to Perl will result in an ordinary Perl list instead of an
+Numbers in default Lua are C doubles, and so are coerced to some type of Num
+(possibly a variation of it like num64) when passing to and from Lua. Accessing
+table keys (below) also applies this coercion.
+
+Tables are exposed as Inline::Lua::Table instances, which can be accessed
+directly with hash or array subscripts (including slicing), converted to a
+.hash or .list, or used as an object (or role via LuaParent). See Usage below
+for details. Arrays and hashes can also be passed in to Lua, and will be
+translated as a newly-created table.
+
+In contrast to tables acting as arrays, multiple return values (not packed in a
+table) from Lua will result in an ordinary Perl list instead of an
 Inline::Lua::Table.
 
-A new Perl object is created for each Lua value being returned, making it
-useless for identity comparison on the Perl side (e.g. === on the same Lua
-table returned from separate calls will be False).
+Lua functions as values themselves are returned as Inline::Lua::Function
+objects, which can be called like any other anonymous routine in Perl,
+including assigning it to an &-sigiled variable to be able to call it with
+ordinary-looking sub call syntax.
+
+A new Perl object is created for each Lua value being returned, making the
+::Object types useless for identity comparison on the Perl side (e.g. === on
+the same Lua table returned from separate calls will be False).
 
 Inline::Lua::Objects can of course be passed back in to Lua, and represent the
 same referenced Lua table or function which they were originally attached to.
@@ -126,7 +139,7 @@ same referenced Lua table or function which they were originally attached to.
 ### Inline::Lua
 
 Represents a Lua instance with it's own global environment and internal stack.
-Multiple Inline::Lua instances may be used, but passing ::Objects between
+Multiple Inline::Lua instances may be used, though passing ::Objects between
 different instances is not supported, and using LuaParent does not work well
 with multiple instances (both of which are described further down).
 
@@ -197,8 +210,8 @@ used as hash subscripts to a ::Table will be automatically coerced to a num.
 
 Positional indices, on the other hand, are treated as integers in Perl as
 always. Lua tables use 1-based indexing when treated as an array, while Perl
-uses zero-based indexing. When accessed as an array, the index is offset by
-one accordingly. In other words, $table[0] is the same element as $table{1}.
+uses zero-based indexing. When accessed as an array, the index is offset
+accordingly. In other words, $table[0] is the same element as $table{1}.
 
 An attempted method call which cannot be resolved by the ::Table object is
 attempted as a method call or attribute access on the table by the usual Lua OO
@@ -206,6 +219,20 @@ conventions, allowing a table to be seemlessly used as an object from Perl
 code, as long as required method and attribute names don't overlap with any
 existing methods in Inline::Lua::Table's inheritance tree. For ways around this
 limitation, see .invoke(), .obj() and LuaParent, below.
+
+#### method hash ()
+#### method keys ()
+#### method values ()
+#### method kv ()
+#### method pairs ()
+
+These methods return a shallow copy of the table which is independent of the
+original Lua object. The structure returned is the same as the corresponding
+Hash methods, with the exception that .hash returns an object hash
+(Hash[Any,Any]) instead of Perl's default (Hash[Mu,Str]). This difference is
+entirely transparent if the values are stored via ordinary hash assignment
+(e.g. my %results = some-lua-func().hash), since the keys will be coerced to
+strings when being assigned to %results.
 
 #### method list ()
 
@@ -225,40 +252,28 @@ find the highest defined whole number key, instead of Lua's length operation.
 This is also done when the end needs to be found for other operations like
 .list or slicing/indexing with Whatever ([\*]) and WhateverCode ([\*-1]).
 
-#### method hash ()
-#### method keys ()
-#### method values ()
-#### method kv ()
-#### method pairs ()
-
-These methods return a shallow copy of the table which is independent of the
-original Lua object. The structure returned is the same as the corresponding
-Hash methods, with the exception that .hash returns an object hash
-(Hash[Any,Any]) instead of Perl's default (Hash[Mu,Str]). This difference is
-entirely transparent if the values are stored via ordinary hash assignment
-(e.g. my %results = some-lua-func().hash), since the keys will be coerced to
-strings when being assigned to %results.
-
 #### method invoke ($method, Bool:D :$call = True, \*@args)
 
-Calls the named method and passes it @args, returning the result. Notably, this
-is currently the only 100% guaranteed way to call a Lua method on a ::Table
-object which might be masked out by a Perl method.
+Calls the named method using the table as the invocant, and passes it @args,
+returning the result. Notably, this is currently the only 100% guaranteed way
+to call a Lua method on a ::Table object which might be masked out by a Perl
+method.
 
-Besides a method name string, $method can also be an Inline::Lua::Function, or
-even any other callable perl object, which will pass the table along with @args
-into the routine. Passing a Callable directly is mainly intended to allow a
-method to be looked up before hand to skip the table key lookup, value return,
-and associated marshalling overhead.
+Besides a method name string, $method can also be an Inline::Lua::Function (or
+even any other callable perl object) which will be called directly instead of
+retrieving the method by name from the table. Passing a Callable directly is
+mainly intended to allow a method to be looked up before hand to skip the table
+key lookup, value return, and associated marshalling overhead of .invoke
+without rearranging the calling code by allowing method names and method
+objects to be used interchangably.
 
 Since it is ubiquitous in Perl 6 to expose attributes via accessors, calling
 .invoke on the name of something which contains a non-function value will
 return the value attached to that table key, effectively acting as an implicit
 accessor. When acting as an accessor, @args is ignored. If it is intended to
 retrieve the function as an Inline::Lua::Function rather than calling it,
-:!call can be passed. All of this paragraph also applies to ordinary-looking
-"$table.attr" method calls, but none of it applies to values returned from
-subscripting or other calls like Inline::Lua.run or .get-global().
+:!call can be passed. This also applies to ordinary-looking "$table.attr"
+method calls.
 
 #### method obj ()
 
@@ -268,14 +283,15 @@ Returns an Inline::Lua::TableObj instance for the table; see directly below.
 
 To ease method name conflicts, this class exposes a table as a Perl object, but
 it does not inherit or compose anything besides Any and Mu. Fallback-based
-dispatch works as previously described. A ::TableObj can be passed back in to
-Lua just as if the associated ::Table object had been passed.
+dispatch works as previously described, just with fewer attributes and methods
+to get in the way. A ::TableObj can be passed back to Lua just as if the
+associated ::Table object had been passed.
 
 #### has $.inline-lua-table
 
 The actual ::Table object for this ::TableObj instance, and the only
-non-default name to conflict with Lua table keys, thus the slightly-awkward
-identifier.
+non-default name to conflict with Lua table keys (thus the slightly-awkward
+identifier).
 
 ### LuaParent
 
