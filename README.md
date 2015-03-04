@@ -150,7 +150,7 @@ Lua libraries loaded.
 
 Lua version is switched per Inline::Lua instance automatically, by trying JIT
 first and falling back to standard Lua 5.1. To skip autodetection and use
-LuaJIT explicitly, pass :lua<JIT>. To disable the auto-detection without using
+LuaJIT explicitly, pass :lua\<JIT>. To disable the auto-detection without using
 LuaJIT, either pass another version (currently only 5.1), or pass :!auto to use
 the non-JIT default.
 
