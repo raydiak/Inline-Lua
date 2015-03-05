@@ -94,15 +94,28 @@ class Inline::Lua::Table {
 
     method end (|args) { self.elems(|args) - 1 }
 
-    method exists_pos ($i) { $i %% 1 && 0 < $i < self.elems }
+    method exists_pos ($pos, |args) { self.exists_key($pos + 1, |args) }
 
-    method at_pos ($i, :$stack, :$leave = $stack) {
+    method at_pos ($self: $pos, :$stack, :$leave = $stack) is rw {
         self.get unless $stack;
-        self.lua.value-to-lua: $i + 1;
+        self.lua.value-to-lua: $pos + 1;
         self.lua.raw.lua_gettable: self.lua.state, -2;
         my \val = self.lua.value-from-lua;
         self.lua.raw.lua_settop: self.lua.state, -2 unless $leave;
-        val;
+        Proxy.new:
+            FETCH => method () { val },
+            STORE => method (|args) { $self.assign_pos($pos, |args) };
+    }
+
+    method assign_pos ($self: $pos, \val, :$stack, :$leave = $stack) is rw {
+        self.get unless $stack;
+        self.lua.value-to-lua: $pos + 1;
+        self.lua.value-to-lua: val;
+        self.lua.raw.lua_settable: self.lua.state, -3;
+        self.lua.raw.lua_settop: self.lua.state, -2 unless $leave;
+        Proxy.new:
+            FETCH => method () { val },
+            STORE => method (|args) { $self.assign_pos($pos, |args) };
     }
 
     method list (:$stack, :$leave = $stack) {
@@ -117,22 +130,35 @@ class Inline::Lua::Table {
 
     ### associative stuff
 
-    method at_key ($k, :$stack, :$leave = $stack) {
+    method exists_key ($key, :$stack, :$leave = $stack) {
         self.get unless $stack;
-        self.lua.value-to-lua: $k;
-        self.lua.raw.lua_gettable: self.lua.state, -2;
-        my \val = self.lua.value-from-lua;
-        self.lua.raw.lua_settop: self.lua.state, -2 unless $leave;
-        val;
-    }
-
-    method exists_key ($k, :$stack, :$leave = $stack) {
-        self.get unless $stack;
-        self.lua.value-to-lua: $k;
+        self.lua.value-to-lua: $key;
         self.lua.raw.lua_gettable: self.lua.state, -2;
         my $ret = self.lua.raw.lua_isnil: self.lua.state, -1;
         self.lua.raw.lua_settop: self.lua.state, $leave ?? -2 !! -3;
         ?$ret;
+    }
+
+    method at_key ($self: $key, :$stack, :$leave = $stack) is rw {
+        self.get unless $stack;
+        self.lua.value-to-lua: $key;
+        self.lua.raw.lua_gettable: self.lua.state, -2;
+        my \val = self.lua.value-from-lua;
+        self.lua.raw.lua_settop: self.lua.state, -2 unless $leave;
+        Proxy.new:
+            FETCH => method () { val },
+            STORE => method (|args) { $self.assign_key($key, |args) };
+    }
+
+    method assign_key ($self: $key, \val, :$stack, :$leave = $stack) is rw {
+        self.get unless $stack;
+        self.lua.value-to-lua: $key;
+        self.lua.value-to-lua: val;
+        self.lua.raw.lua_settable: self.lua.state, -3;
+        self.lua.raw.lua_settop: self.lua.state, -2 unless $leave;
+        Proxy.new:
+            FETCH => method () { val },
+            STORE => method (|args) { $self.assign_key($key, |args) };
     }
 
     method keys (:$stack, :$leave = $stack) {
