@@ -67,7 +67,7 @@ class Inline::Lua::TableObj {
     }
 
     method sink () { self }
-    method FALLBACK (|args) {
+    method FALLBACK (|args) is rw {
         $!inline-lua-table.invoke: |args;
     }
 }
@@ -201,9 +201,9 @@ class Inline::Lua::Table {
 
     ### object stuff
 
-    method invoke ($method, :$call, |args) {
+    method invoke ($method, :$call, |args) is rw {
         my $val = $method;
-        $val = self.at_key($val) unless $val ~~ Callable;
+        $val := self.at_key($val) unless $val ~~ Callable;
 
         $call !eqv False && $val ~~ Callable ??
             $val(self, |args) !! $val;
