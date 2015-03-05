@@ -22,6 +22,14 @@ sub perlnumsum (num $c) {
     $n;
 };
 
+sub perlnum64sum (num64 $c) {
+    my num64 $n = 0e0;
+    loop (my num64 $i = 1e0; $i <= $c; $i = $i + 1e0) {
+        $n = $n + $i;
+    }
+    $n;
+};
+
 my &luasum = Inline::Lua.new(:!auto).run: Q:to/ENDLUA/;
     function sum (c)
         local n = 0
@@ -37,7 +45,7 @@ ENDLUA
 
 my %t;
 
-my $i = @*ARGS ?? +@*ARGS[0] !! 1;
+my $i = @*ARGS ?? +@*ARGS[0] !! 1e7;
 
 say "lua...";
 %t<lua>.push: now;
@@ -53,6 +61,11 @@ say "perlnum...";
 %t<perlnum>.push: now;
 say perlnumsum $i.Num;
 %t<perlnum>.push: now;
+
+say "perlnum64...";
+%t<perlnum64>.push: now;
+say perlnum64sum $i.Num;
+%t<perlnum64>.push: now;
 
 say '';
 for %t {
