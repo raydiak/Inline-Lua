@@ -1,17 +1,10 @@
 role Inline::Lua::Object {
-    has $.lua = die "lua is a required attribute";
-    has $.ref;
+    has $.lua = die "lua is required";
+    has $.ref = die "ref is required";
 
-    method from-stack (:$keep, |args) {
-        self.new(|args).ref-from-stack: :$keep;
-    }
-
-    method ref-from-stack (:$keep) {
-        my $ref = $!lua.ref-from-stack: :$keep;
-        self.unref;
-        $!ref = $ref;
-
-        self;
+    multi method new (:$stack, :$lua!, :$keep, |args) {
+        nextwith :ref($lua.ref-from-stack: :$keep), :$lua, |args if :$stack;
+        nextsame;
     }
 
     method get () {
@@ -85,7 +78,13 @@ class Inline::Lua::Table {
     also does Inline::Lua::Object;
     also does Positional;
     also does Associative;
-    method of () { Mu } # resolve conflict
+    method of () { Mu } # resolve conflict between the two above
+
+    multi method new (:$stack, :$lua!, |args) {
+        nextsame if $stack;
+        $lua.raw.lua_createtable: $lua.state, 0, 0;
+        nextwith :stack, :$lua, |args;
+    }
 
 
 
