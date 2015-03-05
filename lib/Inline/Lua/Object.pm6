@@ -86,6 +86,19 @@ class Inline::Lua::Table {
         nextwith :stack, :$lua, |args;
     }
 
+    method STORE (\vals) {
+        self.get;
+        self.assign_key: $_, Any, :stack for self.keys: :stack;
+        my @vals = vals.flat;
+        my $i = 0;
+        for @vals {
+            when Pair { self.assign_key: .key, .value, :stack }
+            self.assign_pos: $i++, $_, :stack;
+        }
+        self.lua.raw.lua_settop: self.lua.state, -2;
+        self;
+    }
+
 
 
     ### positional stuff
@@ -94,34 +107,18 @@ class Inline::Lua::Table {
 
     method end (|args) { self.elems(|args) - 1 }
 
-    method exists_pos ($pos, |args) { self.exists_key($pos + 1, |args) }
+    method exists_pos ($pos, |args) { self.exists_key: $pos + 1, |args }
 
-    method at_pos ($self: $pos, :$stack, :$leave = $stack) is rw {
-        self.get unless $stack;
-        self.lua.value-to-lua: $pos + 1;
-        self.lua.raw.lua_gettable: self.lua.state, -2;
-        my \val = self.lua.value-from-lua;
-        self.lua.raw.lua_settop: self.lua.state, -2 unless $leave;
-        Proxy.new:
-            FETCH => method () { val },
-            STORE => method (|args) { $self.assign_pos($pos, |args) };
-    }
+    method at_pos ($pos, |args) is rw { self.at_key: $pos + 1, |args }
 
-    method assign_pos ($self: $pos, \val, :$stack, :$leave = $stack) is rw {
-        self.get unless $stack;
-        self.lua.value-to-lua: $pos + 1;
-        self.lua.value-to-lua: val;
-        self.lua.raw.lua_settable: self.lua.state, -3;
-        self.lua.raw.lua_settop: self.lua.state, -2 unless $leave;
-        Proxy.new:
-            FETCH => method () { val },
-            STORE => method (|args) { $self.assign_pos($pos, |args) };
-    }
+    method assign_pos ($pos, |args) is rw { self.assign_key: $pos + 1, |args }
+
+    method delete_pos ($pos, |args) { self.delete_key: $pos + 1, |args }
 
     method list (:$stack, :$leave = $stack) {
         self.get unless $stack;
         my @vals;
-        @vals[$_] = self.at_pos($_, :stack) for ^self.elems(:stack);
+        @vals[$_] = self.at_pos($_, :stack) for ^self.elems: :stack;
         self.lua.raw.lua_settop: self.lua.state, -2 unless $leave;
         @vals;
     }
@@ -140,25 +137,34 @@ class Inline::Lua::Table {
     }
 
     method at_key ($self: $key, :$stack, :$leave = $stack) is rw {
-        self.get unless $stack;
-        self.lua.value-to-lua: $key;
-        self.lua.raw.lua_gettable: self.lua.state, -2;
-        my \val = self.lua.value-from-lua;
-        self.lua.raw.lua_settop: self.lua.state, -2 unless $leave;
-        Proxy.new:
-            FETCH => method () { val },
-            STORE => method (|args) { $self.assign_key($key, |args) };
+        my $lua = self.lua; my ($raw, $state) = $lua.raw, $lua.state;
+        Proxy.new: FETCH => method () {
+            $self.get unless $stack;
+            $lua.value-to-lua: $key;
+            $raw.lua_gettable: $state, -2;
+            my $val = $lua.value-from-lua;
+            $raw.lua_settop: $state, -2 unless $leave;
+            $val;
+        },
+        STORE => method ($val) { $self.assign_key($key, $val, :$stack, :$leave) };
     }
 
-    method assign_key ($self: $key, \val, :$stack, :$leave = $stack) is rw {
+    method assign_key ($key, $val, :$stack, :$leave = $stack) is rw {
+        my $lua = self.lua; my ($raw, $state) = $lua.raw, $lua.state;
         self.get unless $stack;
-        self.lua.value-to-lua: $key;
-        self.lua.value-to-lua: val;
-        self.lua.raw.lua_settable: self.lua.state, -3;
+        $lua.value-to-lua: $key;
+        $lua.value-to-lua: $val;
+        $raw.lua_settable: $state, -3;
+        $raw.lua_settop: $state, -2 unless $leave;
+        self.at_key: $key, :$stack, :$leave;
+    }
+
+    method delete_key ($key, :$stack, :$leave = $stack) {
+        self.get unless $stack;
+        my $val = my $elem := self.at_key($key, :stack);
+        $elem = Any;
         self.lua.raw.lua_settop: self.lua.state, -2 unless $leave;
-        Proxy.new:
-            FETCH => method () { val },
-            STORE => method (|args) { $self.assign_key($key, |args) };
+        $val;
     }
 
     method keys (:$stack, :$leave = $stack) {
