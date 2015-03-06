@@ -65,6 +65,16 @@ method unref ($ref) {
     }
 }
 
+method require (Str:D $name, :$global) {
+    state &lua-require //= self.get-global: 'require';
+    my $table = lua-require $name;
+    self.set-global: $name, $table if
+        !defined($global) && !defined self.get-global: $name or
+        $global eqv True;
+
+    $table;
+}
+
 method get-global (Str:D $name) {
     self!get-global: $name;
     self.value-from-lua;
