@@ -196,16 +196,26 @@ Sets the value of the named global variable.
 
 Base role for values which Lua regards as "objects". This role manages
 references and allows the object to be pushed on to the Lua stack, none of
-which is part of the intended public interface. The object types can not be
-meaningfully instantiated from Perl at this time, rather they always result
-from a value being returned to Perl from Lua.
+which is part of the intended public interface. None of the object types except
+table can be meaningfully instantiated from Perl at this time, rather they
+usually result from a value being returned to Perl from Lua.
+
+All Lua objects also support what are called metatables, which hold callbacks
+that may allow any object to respond to calls like a function, key access like
+a table (which is also used to implement inheritance), and concatenation,
+arithmetic, and comparison like a value. Inline::Lua::Objects support
+metatable-backed indexing and invocation, but do not perform any Perl operator
+overloading. In particular this means that /all/ Inline::Lua::Objects may be
+used as a Perl hash, array, object, role, or routine, and include the
+Positional, Associative, and Callable roles, even if it is not an object type
+which directly supports such features.
 
 ### Inline::Lua::Function
 
-A Lua function which can be called directly from Perl. It is a Callable object
-and so can be invoked like any other Routine, and can be stored in an &-sigiled
-variable. Parameters are exposed in Perl as slurpy positionals with no current
-regard for the actual parameter list of the Lua function.
+A Lua function which can be called directly from Perl. It can be invoked like
+any other Routine, and is often stored in an &-sigiled variable to call like a
+named Perl sub. Parameters are exposed in Perl as slurpy positionals with no
+current regard for the actual parameter list of the Lua function.
 
 ### Inline::Lua::Table
 
@@ -232,7 +242,7 @@ attempted as a method call or attribute access on the table by the usual Lua OO
 conventions, allowing a table to be seemlessly used as an object from Perl
 code, as long as required method and attribute names don't overlap with any
 existing methods in Inline::Lua::Table's inheritance tree. For ways around this
-limitation, see .dispatch(), .obj() and LuaParent, below.
+limitation, see .dispatch(), .obj(), and LuaParent, below.
 
 #### method hash ()
 #### method keys ()
@@ -268,9 +278,9 @@ This is also done when the end needs to be found for other operations like
 
 #### method dispatch ($method, Bool:D :$call = True, \*@args)
 
-Calls the named method using the table as the invocant, and passes it @args,
-returning the result. Notably, this is currently the only 100% guaranteed way
-to call a Lua method on a ::Table object which might be masked out by a Perl
+Calls the named method using the table as the invocant, also passing @args, and
+returns the result. Notably, this is currently the only 100% guaranteed way to
+call a Lua method on a ::Table object which might be masked out by a Perl
 method.
 
 Besides a method name string, $method can also be an Inline::Lua::Function (or
@@ -284,10 +294,16 @@ objects to be used interchangably.
 Since it is ubiquitous in Perl 6 to expose attributes via accessors, calling
 .dispatch with the name of something which contains a non-function value will
 return the value attached to that table key, effectively acting as an implicit
-accessor. When acting as an accessor, @args is ignored. If it is intended to
-retrieve the function as an Inline::Lua::Function rather than calling it,
-:!call can be passed. This also applies to ordinary-looking "$table.attr"
-method calls.
+accessor. When acting as an accessor, @args is ignored.
+
+If it is intended to retrieve an Inline::Lua::Function object rather than
+calling it, :!call can be passed. This also applies to ordinary-looking
+"$table.attr" method calls. This is also necessary to call non-method functions
+in a table, since .dispatch will pass the table itself as the first argument
+whether the function is actually a method or not, because there is no reliable
+way to tell the difference in Lua.  To ensure a function is not called, you can
+also access the function via a hash subscript instead of a method call on the
+same object, which always returns the value, function or otherwise.
 
 #### method obj ()
 
@@ -308,12 +324,15 @@ non-default name to conflict with Lua table keys (thus the slightly-awkward
 identifier).
 
 ### Inline::Lua::Userdata
+
+Full userdata is supported for passing and returning. This class doesn't do
+much else yet (besides the same metatable support which exists on all objects),
+but will eventually provide some native data structures to Perl, e.g.
+Pointer[void].
+
 ### Inline::Lua::Cdata
 
-Full userdata and cdata values are supported for passing and returning, as well
-as access as a function or array if supported by the object's metatable. These
-classes don't do much else yet, but will eventually provide some native data
-structures to Perl, e.g. Pointer[void].
+LuaJIT cdata is supported to the same extent as ::Userdata, directly above.
 
 ### LuaParent
 
