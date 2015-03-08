@@ -154,6 +154,10 @@ same referenced Lua object which they were originally attached to.
 
 ## Usage
 
+For illustrative purposes, the signatures shown here may differ from the actual
+implementation. Undocumented differences also include parameters meant for
+internal use and experimental features.
+
 ### Inline::Lua
 
 Represents a Lua instance with it's own global environment and internal stack.
@@ -243,6 +247,10 @@ conventions, allowing a table to be seemlessly used as an object from Perl
 code, as long as required method and attribute names don't overlap with any
 existing methods in Inline::Lua::Table's inheritance tree. For ways around this
 limitation, see .dispatch(), .obj(), and LuaParent, below.
+
+#### method new (Inline::Lua:D :$lua!)
+
+Creates a new empty table in the given Inline::Lua instance and returns it.
 
 #### method hash ()
 #### method keys ()
