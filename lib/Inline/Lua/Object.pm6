@@ -222,6 +222,14 @@ role Inline::Lua::Object {
         self.unref;
         nextsame;
     }
+
+    method length () {
+        self.get;
+        my $len = $!lua.raw.lua_objlen: $!lua.state, -1;
+        $!lua.raw.lua_settop: $!lua.state, -2;
+
+        $len;
+    }
 }
 
 

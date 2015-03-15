@@ -220,6 +220,13 @@ under e.g. ::Function and ::Table, even when such features also work on any
 object via metatables. Some methods, however, are truly generic to all object
 types regardless of metatable, and so are documented directly below.
 
+#### method length ()
+
+Returns Lua's idea of the "length" of the object. Without a metatable, this
+will return 0 for objects other than table, full userdata, or cdata. Note that
+this is not precisely the same as Perl's idea of length, as documented under
+Inline::Lua::Table.elems() .
+
 #### method ptr ()
 
 Returns a NativeCall Pointer[void] to the object.
