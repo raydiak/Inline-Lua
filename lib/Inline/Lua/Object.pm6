@@ -16,7 +16,7 @@ role Inline::Lua::Object::Callable {
         self.lua.values-from-lua: self.lua.raw.lua_gettop(self.lua.state) - $top;
     }
 
-    method invoke (|args) { self.call: |args }
+    method CALL-ME (|args) { self.call: |args }
 }
 
 
