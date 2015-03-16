@@ -33,7 +33,7 @@ class Inline::Lua::WrapperObj {
 
     method sink () { self }
     method FALLBACK (|args) is rw {
-        $!inline-lua-object.dispatch: |args;
+        $!inline-lua-object.invoke: |args;
     }
 }
 
@@ -104,7 +104,7 @@ role Inline::Lua::Object::Indexable {
 
     ### object stuff
 
-    method dispatch ($method, :$call, |args) is rw {
+    method invoke ($method, :$call, |args) is rw {
         my $val = $method;
         $val := self.AT-KEY($val) unless $val ~~ Callable;
         my $cur-val = $val;
