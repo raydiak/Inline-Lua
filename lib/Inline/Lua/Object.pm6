@@ -39,6 +39,7 @@ class Inline::Lua::WrapperObj {
 
 
 
+class Inline::Lua::Function {...}
 role Inline::Lua::Object::Indexable {
     also does Positional;
     also does Associative;
@@ -109,7 +110,7 @@ role Inline::Lua::Object::Indexable {
         $val := self.AT-KEY($val) unless $val ~~ Callable;
         my $cur-val = $val;
 
-        $call !eqv False && $cur-val ~~ (class Inline::Lua::Function {...}) ??
+        $call !eqv False && $cur-val ~~ Inline::Lua::Function ??
             $cur-val(self, |args) !! $val;
     }
 
