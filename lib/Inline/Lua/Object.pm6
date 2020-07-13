@@ -1,6 +1,9 @@
 role Inline::Lua::Object::Callable {
     also is Callable; # why not 'does'? https://rt.perl.org/Public/Bug/Display.html?id=124006
-    has $.signature handles <arity count> = :(|);
+
+    # https://github.com/rakudo/rakudo/issues/3786
+    # doesn't look like this was doing anything anyway...???...
+    #has $.signature handles <arity count> = :(|);
 
     method call (**@args, :$stack) {
         self.get unless $stack;

@@ -141,7 +141,7 @@ method value-from-lua (:$keep) {
     my $val = do {
         when 'boolean' { ?$!raw.lua_toboolean: $!state, -1 }
         when 'number'  { +$!raw.lua_tonumber:  $!state, -1 }
-        when 'string'  { ~$!raw.lua_tolstring:  $!state, -1 }
+        when 'string'  { ~$!raw.lua_tolstring:  $!state, -1, Pointer[void] }
         when 'userdata' { $!raw.lua_topointer: $!state, -1 }
         when 'nil'     { Any }
         Failure;

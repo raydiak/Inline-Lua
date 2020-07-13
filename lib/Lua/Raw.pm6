@@ -51,7 +51,7 @@ our sub lua_tonumber (
 our sub lua_tolstring (
     Pointer $,
     int32 $,
-    Pointer $ = Pointer[void] )
+    Pointer $ ) # = Pointer[void] breaks here, TODO reduce and report
     returns Str
 {...}
 
@@ -178,14 +178,27 @@ has $.lib = do {
         unless $lib eq <5.1 jit-5.1>.any;
     $lib = "lua$lib";
 };
+has $.lib-ver = $!lib eq 'jit-5.1' ?? v2 !! v0;
 
 # mainly make this private to omit from .perl
-has %!subs =
-    Lua::Raw::.grep({ .key ~~ /^ \&luaL?_/ })».value.map: {
-        # runtime NativeCall technique forked from Inline::Python
-        $_.name => trait_mod:<is>($_.clone, :native(self.lib));
+has %!subs = do {
+    my %subs;
+    for Lua::Raw:: {
+        my $name = .value.name;
+        next unless $name ~~ /^ luaL?_/;
+        my $sub = .value;
+        next unless $sub ~~ Sub;
+        $sub .= clone;
+        trait_mod:<is>($sub, :native(self.lib, self.lib-ver));
+        %subs{$name} = $sub;
     };
-
+    %subs;
+};
+# TODO reduce and report, this now shoves the whole array into the first key
+#    Lua::Raw::.grep({ .key ~~ /^ \&luaL?_/ })».value.map: {
+#        # runtime NativeCall technique forked from Inline::Python
+#        $_.name => trait_mod:<is>($_.clone, :native(self.lib));
+#    };
 
 method sink () { self }
 method FALLBACK ($name, |args) { %!subs{$name}(|args) }

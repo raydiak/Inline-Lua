@@ -30,7 +30,7 @@ sub perlnum64sum (num64 $c) {
     $n;
 };
 
-my &luasum = Inline::Lua.new(:!auto).run: Q:to/ENDLUA/;
+my &luasum = Inline::Lua.new().run: Q:to/ENDLUA/;
     function sum (c)
         local n = 0
         for i = 1, c do
