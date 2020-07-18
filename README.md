@@ -247,7 +247,7 @@ All the usual Positional and Associative subscripts work on a ::Table including
 slicing and possibly various adverbs (untested).
 
 When accessed as a hash, a ::Table appears as an object hash (:{} or
-Hash[Any,Any] in Perl code), in keeping with the semantics of Lua tables. All
+Hash[Mu,Any] in Perl code), in keeping with the semantics of Lua tables. All
 numeric keys will be Num (or possibly some precision and/or native variant
 thereof) because default Lua handles any number as a C double. Numeric values
 used as hash subscripts to a ::Table will be automatically coerced to a num.
@@ -286,7 +286,7 @@ Creates a new empty table in the given Inline::Lua instance and returns it.
 These methods return a shallow copy of the table which is independent of the
 original Lua object. The structure returned is the same as the corresponding
 Hash methods, with the exception that .hash returns an object hash
-(Hash[Any,Any]) instead of Perl's default (Hash[Mu,Str]). This difference is
+(Hash[Mu,Any]) instead of Perl's default (Hash[Mu,Str]). This difference is
 entirely transparent if the values are stored via ordinary hash assignment
 (e.g. my %results = some-lua-func().hash), since the keys will be coerced to
 strings when being assigned to %results.

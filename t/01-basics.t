@@ -49,8 +49,7 @@ ok $L.get-global('foo') eq 'bar', '.set-global() and .get-global() work';
 
     ok $t ~~ Inline::Lua::Table, 'Tables work';
     ok (my @ret = $t.list).elems == 5, 'Arrays work';
-    #ok @ret[4].hash eqv {:foo(3|3e0), :bar(77|77e0)}, 'Hashes work'; TODO reduce and possibly report, this now fails for some reason
-    ok .elems == 2 && .<foo> == 3|3e0 && .<bar> == 77|77e0, 'Hashes work' given @ret[4].hash;
+    ok @ret[4].hash eqv :{ foo => 3e0, bar => 77e0 }, 'Hashes work';
     ok @ret[0] == 123, 'Numbers work';
     ok @ret[1] eq 'abc', 'Strings work';
     ok @ret[2] === True, 'Bools work';

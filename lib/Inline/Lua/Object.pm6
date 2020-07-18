@@ -177,7 +177,7 @@ role Inline::Lua::Object::Iterable {
     method pairs (|args) { self.hash(|args).pairs }
     method hash (:$stack, :$leave = $stack) {
         self.get unless $stack;
-        my %ret{Any};
+        my %ret := :{};
         self.lua.raw.lua_pushnil: self.lua.state;
         while self.lua.raw.lua_next: self.lua.state, -2 {
             my \v = self.lua.value-from-lua;
