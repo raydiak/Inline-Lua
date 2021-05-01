@@ -189,7 +189,7 @@ has %!subs = do {
         my $sub = .value;
         next unless $sub ~~ Sub;
         $sub .= clone;
-        trait_mod:<is>($sub, :native(self.lib, self.lib-ver));
+        trait_mod:<is>($sub, :native(self.lib));#, self.lib-ver));
         %subs{$name} = $sub;
     };
     %subs;
