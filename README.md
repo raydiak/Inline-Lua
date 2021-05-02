@@ -1,6 +1,6 @@
 # Inline::Lua
 
-This is a Perl 6 module which allows execution of Lua code from Perl 6 code
+This is a Raku module which allows execution of Lua code from Raku code
 with inspiration, APIs, and techniques from Inline::Perl5 and Inline::Python.
 
 ## Synopsis
@@ -64,23 +64,23 @@ metatable access or passing back in to another Lua call. See Values further
 down.
 
 Accessing referenced objects, table fields, and global variables can be done
-from Perl without calling Lua code. Named global tables can be used as roles.
+from Raku without calling Lua code. Named global tables can be used as roles.
 
 ## To Do
 
 The API is incomplete, and error reporting is crude. The "Inline::" part is
 arguably NYI, as the present interface is solely object-oriented.
 
-There is no way to pass Perl-native constructs to Lua code, other than simple
-copy conversion of values; directly accessing Perl data structures and calling
-Perl code from Lua is not implemented.
+There is no way to pass Raku-native constructs to Lua code, other than simple
+copy conversion of values; directly accessing Raku data structures and calling
+Raku code from Lua is not implemented.
 
 Metatables are respected for calling and indexing semantics, however they
-cannot yet be accessed directly nor are Lua operator overloads exposed in Perl.
+cannot yet be accessed directly nor are Lua operator overloads exposed in Raku.
 
 Both light and full userdata are supported for passing and returning, but the
-only way to create one from Perl is to pass in a Pointer. In particular, direct
-support for Perl-native binary types like Buf/Blob does not exist.
+only way to create one from Raku is to pass in a Pointer. In particular, direct
+support for Raku-native binary types like Buf/Blob does not exist.
 
 Composing roles from Lua objects doesn't work well when multiple Inline::Lua
 instances are in use. This is because it would be extremely difficult for the
@@ -100,7 +100,7 @@ Inline::Lua currently allows passing and returning any number of boolean,
 number, string, nil, table, function, light or full userdata, and cdata values
 according to the following table.
 
-    Lua             from Perl               to Perl
+    Lua             from Raku               to Raku
     nil             * where {!.defined}     Any
     boolean         Bool                    Bool
     number          Numeric                 Num
@@ -113,7 +113,7 @@ according to the following table.
                                                 Inline::Lua::Cdata
 
 Not counting floating-point values like NaN, nil is the only "undefined" value
-in Lua. All undefined Perl values will be translated as nil, and when it is
+in Lua. All undefined Raku values will be translated as nil, and when it is
 returned from Lua it will yield Any.
 
 Numbers in default Lua are C doubles, and so are coerced to some type of Num
@@ -127,26 +127,26 @@ for details. Arrays and hashes can also be passed in to Lua, and will be
 translated as a newly-created table.
 
 In contrast to tables acting as arrays, multiple return values (not packed in a
-table) from Lua will result in an ordinary Perl list instead of an
+table) from Lua will result in an ordinary Raku list instead of an
 Inline::Lua::Table.
 
 Lua functions as values themselves are returned as Inline::Lua::Function
-objects, which can be called like any other anonymous routine in Perl,
+objects, which can be called like any other anonymous routine in Raku,
 including assigning it to an &-sigiled variable to be able to call it with
 ordinary-looking sub call syntax.
 
 Full userdata and LuaJIT cdata types are exposed as Inline::Lua::Userdata and
 Inline::Lua::Cdata. Light userdata is a simple pointer value (not an object),
-and is passed to and from Perl as a NativeCall Pointer.
+and is passed to and from Raku as a NativeCall Pointer.
 
 Metatables in Lua allow any object type to define behaviors for calling,
 indexing, comparing, and calculating operators, even when the type in question
 does not usually support such operations. This is allowed for by the object
-types, meaning e.g. a ::Table may also function as a Perl Callable (though the
+types, meaning e.g. a ::Table may also function as a Raku Callable (though the
 call will fail if there isn't a corresponding metatable handler).
 
-A new Perl object is created for each Lua value being returned, making the
-::Object types useless for identity comparison on the Perl side (e.g. === on
+A new Raku object is created for each Lua value being returned, making the
+::Object types useless for identity comparison on the Raku side (e.g. === on
 the same Lua table returned from separate calls will be False).
 
 Inline::Lua::Objects can of course be passed back in to Lua, and represent the
@@ -160,7 +160,7 @@ internal use and experimental features.
 
 ### Inline::Lua
 
-Represents a Lua instance with it's own global environment and internal stack.
+Represents a Lua instance with its own global environment and internal stack.
 Multiple Inline::Lua instances may be used, though passing ::Objects between
 different instances is not supported, and using LuaParent does not work well
 with multiple instances (both of which are described further down).
@@ -201,16 +201,16 @@ Sets the value of the named global variable.
 Base role for values which Lua regards as "objects". This role manages
 references and allows the object to be pushed on to the Lua stack, none of
 which is part of the intended public interface. None of the object types except
-table can be meaningfully instantiated from Perl at this time, rather they
-usually result from a value being returned to Perl from Lua.
+table can be meaningfully instantiated from Raku at this time, rather they
+usually result from a value being returned to Raku from Lua.
 
 All Lua objects also support what are called metatables, which hold callbacks
 that may allow any object to respond to calls like a function, key access like
 a table (which is also used to implement inheritance), and concatenation,
 arithmetic, and comparison like a value. Inline::Lua::Objects support
-metatable-backed indexing and invocation, but do not perform any Perl operator
+metatable-backed indexing and invocation, but do not perform any Raku operator
 overloading. In particular this means that /all/ Inline::Lua::Objects may be
-used as a Perl hash, array, object, role, or routine, and include the
+used as a Raku hash, array, object, role, or routine, and include the
 Positional, Associative, and Callable roles, even if it is not an object type
 which directly supports such features.
 
@@ -223,7 +223,7 @@ types regardless of metatable, and so are documented directly below.
 
 Returns Lua's idea of the "length" of the object. Without a metatable, this
 will return 0 for objects other than table, full userdata, or cdata. Note that
-this is not precisely the same as Perl's idea of length, as documented under
+this is not precisely the same as Raku's idea of length, as documented under
 Inline::Lua::Table.elems() .
 
 #### method ptr ()
@@ -232,41 +232,41 @@ Returns a NativeCall Pointer[void] to the object.
 
 ### Inline::Lua::Function
 
-A Lua function which can be used directly from Perl. It can be executed like
+A Lua function which can be used directly from Raku. It can be executed like
 any other Routine, and is often stored in an &-sigiled variable to call like a
-named Perl sub. Parameters are exposed in Perl as slurpy positionals with no
+named Raku sub. Parameters are exposed in Raku as slurpy positionals with no
 current regard for the actual parameter list of the Lua function.
 
 ### Inline::Lua::Table
 
-A table in Lua represents the concepts which Perl regards as variously arrays,
+A table in Lua represents the concepts which Raku regards as variously arrays,
 hashes, objects, classes, roles, and more. Therefore this type attempts to
 provide an interface as all of these things. Underneath, however, calls to a
-::Table perform the operation on the referenced Lua table, not a Perl copy.
+::Table perform the operation on the referenced Lua table, not a Raku copy.
 All the usual Positional and Associative subscripts work on a ::Table including
 slicing and possibly various adverbs (untested).
 
 When accessed as a hash, a ::Table appears as an object hash (:{} or
-Hash[Mu,Any] in Perl code), in keeping with the semantics of Lua tables. All
+Hash[Mu,Any] in Raku code), in keeping with the semantics of Lua tables. All
 numeric keys will be Num (or possibly some precision and/or native variant
 thereof) because default Lua handles any number as a C double. Numeric values
 used as hash subscripts to a ::Table will be automatically coerced to a num.
 
-Positional indices, on the other hand, are treated as integers in Perl as
-always. Lua tables use 1-based indexing when treated as an array, while Perl
+Positional indices, on the other hand, are treated as integers in Raku as
+always. Lua tables use 1-based indexing when treated as an array, while Raku
 uses zero-based indexing. When accessed as an array, the index is offset
 accordingly. In other words, $table[0] is the same element as $table{1}.
 
 A method call which cannot be resolved by the ::Table object is attempted as a
 method call or attribute access on the table by the usual Lua OO conventions,
-allowing a table to be seemlessly used as an object from Perl code, as long as
+allowing a table to be seemlessly used as an object from Raku code, as long as
 required method and attribute names don't overlap with any existing methods in
 Inline::Lua::Table's inheritance tree. For ways around this limitation, see
 .invoke(), .obj(), and LuaParent, below.
 
 Unlike objects behaving as tables via metatable-backed indexing, an actual
 ::Table can be iterated over and its full set of keys and values can be known.
-This means that tables can accept list assignments in Perl (though they
+This means that tables can accept list assignments in Raku (though they
 intentionally do not themselves flatten in list context), and they also are
 able to provide the .list, .hash and related methods. While these
 iteration-backed features only work on ::Table itself, table-like array and
@@ -286,7 +286,7 @@ Creates a new empty table in the given Inline::Lua instance and returns it.
 These methods return a shallow copy of the table which is independent of the
 original Lua object. The structure returned is the same as the corresponding
 Hash methods, with the exception that .hash returns an object hash
-(Hash[Mu,Any]) instead of Perl's default (Hash[Mu,Str]). This difference is
+(Hash[Mu,Any]) instead of Raku's default (Hash[Mu,Str]). This difference is
 entirely transparent if the values are stored via ordinary hash assignment
 (e.g. my %results = some-lua-func().hash), since the keys will be coerced to
 strings when being assigned to %results.
@@ -300,8 +300,8 @@ independent of the original Lua object.
 #### method end ()
 
 Lua has a nondeterministic notion of where the end of a sparse array is, while
-Perl always considers the end to be after the defined element with the highest
-index, which always includes any holes within the array. Perl arguably doesn't
+Raku always considers the end to be after the defined element with the highest
+index, which always includes any holes within the array. Raku arguably doesn't
 even support arrays with missing elements so much as arrays with undefined
 elements, unless using a type of hash instead, as Lua does. To compensate, a
 bit of slower but far more correct code iterates over all the table's keys to
@@ -313,18 +313,18 @@ This is also done when the end needs to be found for other operations like
 
 Calls the named method using the table as the invocant, also passing @args, and
 returns the result. Notably, this is currently the only 100% guaranteed way to
-call a Lua method on a ::Table object which might be masked out by a Perl
+call a Lua method on a ::Table object which might be masked out by a Raku
 method.
 
 Besides a method name string, $method can also be an Inline::Lua::Function (or
-even any other Perl Callable object) which will be called directly instead of
+even any other Raku Callable object) which will be called directly instead of
 retrieving the method by name from the table. Passing a Callable directly is
 mainly intended to allow a method to be looked up before hand to skip the table
 key lookup, value return, and associated marshalling overhead of .invoke
 without rearranging the calling code by allowing method names and method
 objects to be used interchangably.
 
-Since it is ubiquitous in Perl 6 to expose attributes via accessors, calling
+Since it is ubiquitous in Raku to expose attributes via accessors, calling
 .invoke with the name of something which contains a non-function value will
 return the value attached to that table key, effectively acting as an implicit
 accessor. When acting as an accessor, @args is ignored.
@@ -344,9 +344,9 @@ Returns an Inline::Lua::WrapperObj instance for the object; see directly below.
 
 ### Inline::Lua::WrapperObj
 
-To ease method name conflicts, this class exposes a Lua object as a Perl
+To ease method name conflicts, this class exposes a Lua object as a Raku
 object, but it does not inherit or compose anything besides Any and Mu.
-Invocation works as previously described under ::Table, attempting Perl methods
+Invocation works as previously described under ::Table, attempting Raku methods
 before Lua, just with fewer attributes and methods to get in the way (meaning
 it lacks all other features and methods in this document). A ::WrapperObj can
 be passed back to Lua just as if the associated ::Object had been passed.
@@ -361,7 +361,7 @@ identifier).
 
 Full userdata is supported for passing and returning. This class doesn't do
 much else directly but supports metatable behaviors like any
-Inline::Lua::Object, or might be used for passing it's .ptr() to other Perl
+Inline::Lua::Object, or might be used for passing its .ptr() to other Raku
 NativeCall code.
 
 ### Inline::Lua::Cdata
@@ -387,5 +387,5 @@ https://github.com/raydiak/Inline-Lua
 
 raydiak@cyberuniverses.com
 
-raydiak on #perl6 on irc.freenode.net
+raydiak on #raku on irc.freenode.net
 
