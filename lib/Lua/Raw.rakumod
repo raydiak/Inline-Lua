@@ -178,7 +178,10 @@ has $.lib = do {
         unless $lib eq <5.1 jit-5.1>.any;
     $lib = "lua$lib";
 };
-has $.lib-ver = $!lib eq 'luajit-5.1' ?? v2 !! v0;
+# different distros use different numbering schemes
+    # e.g. liblua5.1.so.0 (debian) vs liblua5.1.so.5.1 (arch)
+    # so don't use explicit library version numbers
+#has $.lib-ver = $!lib eq 'luajit-5.1' ?? v2 !! v0;
 
 # mainly make this private to omit from .raku
 has %!subs = do {
@@ -189,7 +192,7 @@ has %!subs = do {
         my $sub = .value;
         next unless $sub ~~ Sub;
         $sub .= clone;
-        trait_mod:<is>($sub, :native(self.lib, self.lib-ver));
+        trait_mod:<is>($sub, :native(self.lib));#, self.lib-ver));
         %subs{$name} = $sub;
     };
     %subs;
