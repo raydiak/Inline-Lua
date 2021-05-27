@@ -387,5 +387,5 @@ https://github.com/raydiak/Inline-Lua
 
 raydiak@cyberuniverses.com
 
-raydiak on #raku on irc.freenode.net
+raydiak on #raku on irc.libera.chat
 
